@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { generateQuestName } from "@/lib/rpg-names";
 import { XP_VALUES } from "@/lib/constants";
 import { awardXP } from "@/lib/xp";
+import { createQuestFromEvent } from "@/lib/quests";
 
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -57,12 +58,14 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
           where: { id: deployment.id },
           data: { status: "failed", completedAt: new Date() },
         });
+        await createQuestFromEvent("deploy_failed", { siteId: site.id, deploymentId: deployment.id });
       }
     } catch {
       await prisma.deployment.update({
         where: { id: deployment.id },
         data: { status: "failed", completedAt: new Date() },
       });
+      await createQuestFromEvent("deploy_failed", { siteId: site.id, deploymentId: deployment.id });
     }
   } else {
     // Simulate success for now

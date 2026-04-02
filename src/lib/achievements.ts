@@ -30,6 +30,21 @@ export async function checkAndUnlockAchievement(key: string): Promise<boolean> {
       conditionMet = hour !== undefined && (hour >= 0 && hour < 6);
       break;
     }
+    case "quest_slayer": {
+      const count = await prisma.quest.count({ where: { status: "completed" } });
+      conditionMet = count >= 10;
+      break;
+    }
+    case "quest_legend": {
+      const count = await prisma.quest.count({ where: { status: "completed" } });
+      conditionMet = count >= 50;
+      break;
+    }
+    case "bug_hunter": {
+      const count = await prisma.quest.count({ where: { status: "completed", category: "bug_hunt" } });
+      conditionMet = count >= 5;
+      break;
+    }
     default:
       return false;
   }

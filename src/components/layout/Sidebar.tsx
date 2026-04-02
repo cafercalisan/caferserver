@@ -14,6 +14,7 @@ import {
   User,
   LogOut,
   Shield,
+  ClipboardList,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
@@ -21,7 +22,8 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { href: "/dashboard", icon: Map, label: "Harita" },
   { href: "/sites", icon: Castle, label: "Köyler" },
-  { href: "/deployments", icon: Swords, label: "Görevler" },
+  { href: "/quests", icon: ClipboardList, label: "Görev Loncası" },
+  { href: "/deployments", icon: Swords, label: "Seferler" },
   { href: "/terminal", icon: Terminal, label: "Terminal" },
   { href: "/logs", icon: ScrollText, label: "Kayıtlar" },
   { href: "/files", icon: FolderOpen, label: "Dosyalar" },

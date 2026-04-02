@@ -29,6 +29,7 @@ model Site {
   createdAt    DateTime      @default(now())
   healthChecks HealthCheck[]
   deployments  Deployment[]
+  quests       Quest[]
 }
 
 model HealthCheck {
@@ -68,6 +69,7 @@ model Deployment {
   triggeredAt     DateTime  @default(now())
   completedAt     DateTime?
   logs            String?   @db.Text
+  quests          Quest[]
 
   @@index([siteId, triggeredAt])
 }
@@ -91,4 +93,46 @@ model ActivityLog {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+model Quest {
+  id           String         @id @default(cuid())
+  title        String
+  description  String?        @db.Text
+  questName    String
+  status       String         @default("open")
+  priority     String         @default("normal")
+  category     String         @default("general")
+  projectKey   String?
+  siteId       String?
+  site         Site?          @relation(fields: [siteId], references: [id], onDelete: SetNull)
+  deploymentId String?
+  deployment   Deployment?    @relation(fields: [deploymentId], references: [id], onDelete: SetNull)
+  labels       String[]       @default([])
+  dueDate      DateTime?
+  xpReward     Int            @default(0)
+  xpAwarded    Boolean        @default(false)
+  createdBy    String?
+  assignee     String?
+  completedAt  DateTime?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  comments     QuestComment[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([siteId])
+  @@index([createdAt])
+}
+
+model QuestComment {
+  id        String   @id @default(cuid())
+  questId   String
+  quest     Quest    @relation(fields: [questId], references: [id], onDelete: Cascade)
+  author    String   @default("user")
+  content   String   @db.Text
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([questId, createdAt])
 }

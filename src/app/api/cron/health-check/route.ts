@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { createQuestFromEvent, autoCompleteQuestsForSite } from "@/lib/quests";
 
 export async function GET(req: NextRequest) {
   // Verify secret
@@ -60,6 +61,8 @@ export async function GET(req: NextRequest) {
           metadata: { siteId: site.id, status },
         },
       });
+      // Otomatik quest olustur
+      await createQuestFromEvent("site_down", { siteId: site.id });
     } else if (lastCheck && !lastCheck.isUp && isUp) {
       await prisma.activityLog.create({
         data: {
@@ -68,6 +71,8 @@ export async function GET(req: NextRequest) {
           metadata: { siteId: site.id, responseTime },
         },
       });
+      // Acik bug_hunt quest'lerini otomatik tamamla
+      await autoCompleteQuestsForSite(site.id);
     }
 
     results.push({ site: site.name, status, responseTime, isUp });

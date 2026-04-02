@@ -2,10 +2,11 @@ import { prisma } from "@/lib/db";
 import { CastleMap } from "@/components/dashboard/CastleMap";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { QuestBoard } from "@/components/dashboard/QuestBoard";
-import type { SiteStatus, DeploymentInfo, ActivityLogEntry } from "@/types";
+import { QuestSummaryWidget } from "@/components/dashboard/QuestSummaryWidget";
+import type { SiteStatus, DeploymentInfo, ActivityLogEntry, QuestStats } from "@/types";
 
 export default async function DashboardPage() {
-  const [sites, recentDeployments, recentActivity] = await Promise.all([
+  const [sites, recentDeployments, recentActivity, questStatsData] = await Promise.all([
     prisma.site.findMany({
       orderBy: { order: "asc" },
       include: {
@@ -24,6 +25,20 @@ export default async function DashboardPage() {
       orderBy: { createdAt: "desc" },
       take: 15,
     }),
+    Promise.all([
+      prisma.quest.count(),
+      prisma.quest.count({ where: { status: "open" } }),
+      prisma.quest.count({ where: { status: "in_progress" } }),
+      prisma.quest.count({ where: { status: "completed" } }),
+      prisma.quest.count({ where: { status: "failed" } }),
+      prisma.quest.count({
+        where: { status: { in: ["open", "in_progress"] }, dueDate: { lt: new Date() } },
+      }),
+      prisma.quest.aggregate({
+        _sum: { xpReward: true },
+        where: { status: "completed", xpAwarded: true },
+      }),
+    ]),
   ]);
 
   // Calculate uptime percentage (last 24h)
@@ -77,6 +92,16 @@ export default async function DashboardPage() {
     createdAt: a.createdAt.toISOString(),
   }));
 
+  const [total, openCount, inProgressCount, completedCount, failedCount, overdueCount, xpAgg] = questStatsData;
+  const questStats: QuestStats = {
+    total,
+    byStatus: { open: openCount, in_progress: inProgressCount, completed: completedCount, failed: failedCount, cancelled: 0 },
+    byPriority: { legendary: 0, epic: 0, rare: 0, normal: 0, common: 0 },
+    overdue: overdueCount,
+    completedThisWeek: 0,
+    totalXpFromQuests: xpAgg._sum.xpReward ?? 0,
+  };
+
   // Mock server metrics until SSH is connected
   const serverMetrics = {
     cpuUsage: 0,
@@ -107,8 +132,9 @@ export default async function DashboardPage() {
       <CastleMap sites={siteStatuses} serverMetrics={serverMetrics} />
 
       {/* Bottom widgets */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <QuestBoard deployments={deploymentInfos} />
+        <QuestSummaryWidget stats={questStats} />
         <ActivityFeed activities={activityEntries} />
       </div>
     </div>

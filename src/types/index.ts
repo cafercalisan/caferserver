@@ -63,3 +63,46 @@ export interface ActivityLogEntry {
   metadata: Record<string, unknown> | null;
   createdAt: string;
 }
+
+export interface QuestInfo {
+  id: string;
+  title: string;
+  description: string | null;
+  questName: string;
+  status: "open" | "in_progress" | "completed" | "failed" | "cancelled";
+  priority: "legendary" | "epic" | "rare" | "normal" | "common";
+  category: string;
+  projectKey: string | null;
+  siteId: string | null;
+  siteName: string | null;
+  villageType: string | null;
+  deploymentId: string | null;
+  labels: string[];
+  dueDate: string | null;
+  xpReward: number;
+  xpAwarded: boolean;
+  createdBy: string | null;
+  assignee: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  commentCount: number;
+}
+
+export interface QuestCommentInfo {
+  id: string;
+  questId: string;
+  author: string;
+  content: string;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export interface QuestStats {
+  total: number;
+  byStatus: Record<string, number>;
+  byPriority: Record<string, number>;
+  overdue: number;
+  completedThisWeek: number;
+  totalXpFromQuests: number;
+}

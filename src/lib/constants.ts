@@ -13,6 +13,39 @@ export const XP_VALUES = {
   SITE_RECOVERED: 75,
 } as const;
 
+export const QUEST_XP_BASE: Record<string, number> = {
+  common: 10,
+  normal: 25,
+  rare: 50,
+  epic: 75,
+  legendary: 150,
+};
+
+export const QUEST_PRIORITIES = [
+  { value: "legendary", label: "Efsanevi", icon: "crown", color: "#f0c040" },
+  { value: "epic", label: "Epik", icon: "flame", color: "#a855f7" },
+  { value: "rare", label: "Nadir", icon: "gem", color: "#4488cc" },
+  { value: "normal", label: "Normal", icon: "sword", color: "#44cc44" },
+  { value: "common", label: "Sıradan", icon: "shield", color: "#888888" },
+] as const;
+
+export const QUEST_STATUSES = [
+  { value: "open", label: "İlan Edildi", icon: "scroll" },
+  { value: "in_progress", label: "Sefer Başladı", icon: "swords" },
+  { value: "completed", label: "Fethedildi", icon: "trophy" },
+  { value: "failed", label: "Düşmüş", icon: "skull" },
+  { value: "cancelled", label: "Geri Çekildi", icon: "ban" },
+] as const;
+
+export const QUEST_CATEGORIES = [
+  { value: "bug_hunt", label: "Canavar Avı", icon: "bug" },
+  { value: "fortification", label: "Tahkim", icon: "castle" },
+  { value: "expedition", label: "Keşif", icon: "compass" },
+  { value: "patrol", label: "Devriye", icon: "eye" },
+  { value: "ritual", label: "Ayin", icon: "sparkles" },
+  { value: "general", label: "Genel", icon: "scroll" },
+] as const;
+
 export const VILLAGE_TYPES = {
   library: { label: "Kütüphane", color: "#8b5cf6" },
   fortress: { label: "Kale", color: "#ef4444" },
@@ -111,5 +144,26 @@ export const ACHIEVEMENTS_CONFIG = [
     description: "Tüm siteler 30 gün kesintisiz sağlıklı",
     icon: "🏆",
     xpReward: 2000,
+  },
+  {
+    key: "quest_slayer",
+    name: "Görev Avcısı",
+    description: "10 görevi tamamla",
+    icon: "📜",
+    xpReward: 200,
+  },
+  {
+    key: "quest_legend",
+    name: "Efsanevi Görevci",
+    description: "50 görevi tamamla",
+    icon: "🏅",
+    xpReward: 1000,
+  },
+  {
+    key: "bug_hunter",
+    name: "Canavar Avcısı",
+    description: "5 canavar avı görevini tamamla",
+    icon: "🐛",
+    xpReward: 300,
   },
 ];
