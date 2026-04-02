@@ -158,9 +158,9 @@ export function QuestDetail({ quest: initialQuest }: QuestDetailProps) {
 
   useEffect(() => {
     if (!autoRefresh) return;
-    const interval = setInterval(refreshQuest, 5000);
+    const interval = setInterval(refreshQuest, agentWorking ? 3000 : 5000);
     return () => clearInterval(interval);
-  }, [autoRefresh, refreshQuest]);
+  }, [autoRefresh, refreshQuest, agentWorking]);
 
   async function updateStatus(newStatus: string) {
     setUpdating(true);
@@ -216,7 +216,7 @@ export function QuestDetail({ quest: initialQuest }: QuestDetailProps) {
     const msg = agentMessage.trim();
     setAgentMessage("");
     setAgentWorking(true);
-    setAutoRefresh(true); // Agent calisirken canli takip ac
+    setAutoRefresh(true);
 
     try {
       const res = await fetch("/api/agent/chat", {
@@ -226,7 +226,7 @@ export function QuestDetail({ quest: initialQuest }: QuestDetailProps) {
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Agent hatasi" }));
+        const err = await res.json().catch(() => ({ error: "Agent hatası" }));
         setQuest((q) => ({
           ...q,
           comments: [...q.comments, {
@@ -236,14 +236,27 @@ export function QuestDetail({ quest: initialQuest }: QuestDetailProps) {
             createdAt: new Date().toISOString(),
           }],
         }));
+        setAgentWorking(false);
       }
-
-      // Son durumu cek
-      await refreshQuest();
-    } finally {
+      // Agent arka planda calisiyor — agentWorking true kalacak
+      // Auto-refresh ile "Agent gorevi tamamladi" mesajini yakalayacagiz
+    } catch {
       setAgentWorking(false);
     }
   }
+
+  // Agent tamamlanma tespiti: yorumlarda "tamamladı" veya "hatası" varsa working'i kapat
+  useEffect(() => {
+    if (!agentWorking) return;
+    const lastComment = quest.comments[quest.comments.length - 1];
+    if (lastComment && (
+      lastComment.content.includes("Agent görevi tamamladı") ||
+      lastComment.content.includes("Agent hatası") ||
+      lastComment.content.includes("Agent crash")
+    )) {
+      setAgentWorking(false);
+    }
+  }, [quest.comments, agentWorking]);
 
   async function deleteQuest() {
     if (!confirm("Bu görevi iptal etmek istediğinize emin misiniz?")) return;
