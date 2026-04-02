@@ -20,7 +20,8 @@ RUN mkdir -p /externals && \
     for pkg in bcryptjs ssh2 pg pg-pool pg-types pg-protocol pg-int8 pg-numeric \
       postgres-array postgres-bytea postgres-date postgres-interval postgres-range \
       pgpass buffer-writer packet-reader pg-cloudflare pg-connection-string split2 \
-      cpu-features nan asn1 bcrypt-pbkdf buildcheck tweetnacl; do \
+      cpu-features nan asn1 bcrypt-pbkdf buildcheck tweetnacl \
+      @anthropic-ai/sdk; do \
       [ -d "node_modules/$pkg" ] && cp -r "node_modules/$pkg" "/externals/$pkg" || true; \
     done
 

@@ -116,6 +116,8 @@ export function QuestDetail({ quest: initialQuest }: QuestDetailProps) {
   const [autoRefresh, setAutoRefresh] = useState(["open", "in_progress"].includes(initialQuest.status));
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
   const [statusJustChanged, setStatusJustChanged] = useState(false);
+  const [agentMessage, setAgentMessage] = useState("");
+  const [agentWorking, setAgentWorking] = useState(false);
   const commentsEndRef = useRef<HTMLDivElement>(null);
   const prevCommentCount = useRef(initialQuest.comments.length);
 
@@ -205,6 +207,41 @@ export function QuestDetail({ quest: initialQuest }: QuestDetailProps) {
       }
     } finally {
       setSending(false);
+    }
+  }
+
+  async function sendToAgent(e: React.FormEvent) {
+    e.preventDefault();
+    if (!agentMessage.trim() || agentWorking) return;
+    const msg = agentMessage.trim();
+    setAgentMessage("");
+    setAgentWorking(true);
+    setAutoRefresh(true); // Agent calisirken canli takip ac
+
+    try {
+      const res = await fetch("/api/agent/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: msg, questId: quest.id }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Agent hatasi" }));
+        setQuest((q) => ({
+          ...q,
+          comments: [...q.comments, {
+            id: `err-${Date.now()}`,
+            author: "system",
+            content: `Agent hatası: ${err.error}`,
+            createdAt: new Date().toISOString(),
+          }],
+        }));
+      }
+
+      // Son durumu cek
+      await refreshQuest();
+    } finally {
+      setAgentWorking(false);
     }
   }
 
@@ -463,6 +500,7 @@ export function QuestDetail({ quest: initialQuest }: QuestDetailProps) {
                 const AuthorIcon = authorIcons[c.author] ?? Bot;
                 const isSystem = c.author === "system";
                 const isAgent = !["user", "system"].includes(c.author);
+                const isAssistant = c.author === "assistant";
                 const isStatusChange = isSystem && c.content.startsWith("Durum değişti:");
                 const isNew = i >= prevCommentCount.current - 1 && i === quest.comments.length - 1;
 
@@ -481,17 +519,18 @@ export function QuestDetail({ quest: initialQuest }: QuestDetailProps) {
 
                     <div className={cn(
                       "w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-3 relative z-10",
-                      c.author === "user" ? "bg-gold/20" : isSystem ? "bg-mana-blue/20" : "bg-health-green/20"
+                      c.author === "user" ? "bg-gold/20" : isAssistant ? "bg-purple-500/20" : isSystem ? "bg-mana-blue/20" : "bg-health-green/20"
                     )}>
                       <AuthorIcon className={cn(
                         "w-3.5 h-3.5",
-                        c.author === "user" ? "text-gold" : isSystem ? "text-mana-blue" : "text-health-green"
+                        c.author === "user" ? "text-gold" : isAssistant ? "text-purple-400" : isSystem ? "text-mana-blue" : "text-health-green"
                       )} />
                     </div>
 
                     <div className={cn(
                       "flex-1 min-w-0 py-2.5 px-3 rounded-lg mb-1",
                       isStatusChange ? "bg-mana-blue/5 border border-mana-blue/10" :
+                      isAssistant ? "bg-purple-500/5 border border-purple-500/10" :
                       isSystem ? "bg-castle-border/10" :
                       isAgent ? "bg-health-green/5 border border-health-green/10" :
                       "bg-castle-surface/50"
@@ -499,9 +538,9 @@ export function QuestDetail({ quest: initialQuest }: QuestDetailProps) {
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className={cn(
                           "text-xs font-medium",
-                          c.author === "user" ? "text-gold" : isSystem ? "text-mana-blue" : "text-health-green"
+                          c.author === "user" ? "text-gold" : isAssistant ? "text-purple-400" : isSystem ? "text-mana-blue" : "text-health-green"
                         )}>
-                          {c.author === "user" ? "Sen" : c.author === "system" ? "Sistem" : c.author}
+                          {c.author === "user" ? "Sen" : c.author === "assistant" ? "Claude" : c.author === "system" ? "Sistem" : c.author}
                         </span>
                         <span className="text-[10px] text-parchment-dim">
                           {formatDateTime(c.createdAt)}
@@ -509,7 +548,10 @@ export function QuestDetail({ quest: initialQuest }: QuestDetailProps) {
                         {isStatusChange && (
                           <Badge variant="info" className="text-[10px] px-1.5 py-0">durum</Badge>
                         )}
-                        {isAgent && (
+                        {isAssistant && (
+                          <Badge className="text-[10px] px-1.5 py-0 bg-purple-500/20 text-purple-400 border-purple-500/30">claude</Badge>
+                        )}
+                        {isAgent && !isAssistant && (
                           <Badge variant="success" className="text-[10px] px-1.5 py-0">agent</Badge>
                         )}
                       </div>
@@ -526,18 +568,53 @@ export function QuestDetail({ quest: initialQuest }: QuestDetailProps) {
               <div ref={commentsEndRef} />
             </div>
 
-            {/* Add Comment */}
-            <form onSubmit={addComment} className="flex gap-2">
-              <input
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Görev günlüğüne not ekle..."
-                className="flex-1 h-9 rounded-lg border border-castle-border bg-castle-surface px-3 text-sm text-parchment placeholder:text-parchment-dim/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/30 transition-all"
-              />
-              <Button size="sm" type="submit" disabled={sending || !comment.trim()}>
-                <Send className="w-4 h-4" />
-              </Button>
-            </form>
+            {/* Agent Chat */}
+            <div className="space-y-2">
+              <form onSubmit={sendToAgent} className="flex gap-2">
+                <div className="relative flex-1">
+                  <Bot className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-health-green" />
+                  <input
+                    value={agentMessage}
+                    onChange={(e) => setAgentMessage(e.target.value)}
+                    placeholder={agentWorking ? "Agent çalışıyor..." : "Agent'a görev ver... (örn: blog sayfaları oluştur)"}
+                    disabled={agentWorking}
+                    className="flex-1 w-full h-10 rounded-lg border border-health-green/30 bg-health-green/5 pl-9 pr-3 text-sm text-parchment placeholder:text-parchment-dim/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-health-green/30 transition-all disabled:opacity-50"
+                  />
+                </div>
+                <Button size="default" type="submit" disabled={agentWorking || !agentMessage.trim()} className="bg-health-green/20 text-health-green border-health-green/30 hover:bg-health-green/30">
+                  {agentWorking ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Zap className="w-4 h-4" />
+                  )}
+                  <span className="hidden sm:inline">{agentWorking ? "Çalışıyor" : "Gönder"}</span>
+                </Button>
+              </form>
+
+              {agentWorking && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-health-green/5 border border-health-green/20"
+                >
+                  <span className="w-2 h-2 rounded-full bg-health-green animate-pulse" />
+                  <span className="text-xs text-health-green">Agent sunucuda çalışıyor — ilerleme görev günlüğünde canlı olarak görünecek</span>
+                </motion.div>
+              )}
+
+              {/* Manual Comment */}
+              <form onSubmit={addComment} className="flex gap-2">
+                <input
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Not ekle..."
+                  className="flex-1 h-8 rounded-lg border border-castle-border bg-castle-surface px-3 text-xs text-parchment placeholder:text-parchment-dim/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/30 transition-all"
+                />
+                <Button size="sm" type="submit" disabled={sending || !comment.trim()} variant="outline">
+                  <Send className="w-3.5 h-3.5" />
+                </Button>
+              </form>
+            </div>
           </div>
         </div>
 
