@@ -8,8 +8,17 @@ async function log(qid: string, author: string, content: string) {
   await prisma.questComment.create({ data: { questId: qid, author, content } });
 }
 
-const BLOCKED = ["rm -rf /", "rm -rf /*", "mkfs", "dd if=", "> /dev/sd", "chmod 777 /"];
-function isSafe(cmd: string) { return !BLOCKED.some(b => cmd.includes(b)); }
+const BLOCKED = [
+  "rm -rf /", "rm -rf /*", "mkfs", "dd if=", "> /dev/sd", "chmod 777 /",
+  "docker stop", "docker rm", "docker kill", "docker remove",
+  "docker system prune", "docker rmi",
+  "systemctl stop", "systemctl disable", "reboot", "shutdown",
+  "userdel", "passwd", "DROP DATABASE", "DROP TABLE",
+];
+function isSafe(cmd: string) {
+  const lower = cmd.toLowerCase();
+  return !BLOCKED.some(b => lower.includes(b.toLowerCase()));
+}
 
 const toolDeclarations: FunctionDeclaration[] = [
   {
@@ -111,7 +120,15 @@ ONEMLI:
 - Birden fazla dosya olusturman gerekebilir — hepsini sirayla yap.
 - "Yapacagim" deme, DIREKT yap.
 - report_progress cagirip bekleme — hemen sonraki adima gec.
-- Minimum 10 adim calis, gorevi gerçekten tamamla.`;
+- Minimum 10 adim calis, gorevi gerçekten tamamla.
+
+KESINLIKLE YASAK (bunlari yaparsan sistem bozulur):
+- ASLA "docker stop", "docker rm", "docker kill" calistirma
+- ASLA mevcut container'lari durdurma veya silme
+- ASLA "docker build" ile mevcut image'lari degistirme
+- Degisiklikleri SADECE dosya sisteminde yap, container'a dokunma
+- Gerekirse sadece "docker exec <container> ..." ile container ICINDE komut calistir
+- Eger projenin yeniden derlenmesi gerekiyorsa SADECE report_progress ile kullaniciyi bilgilendir, KENDIN YAPMA`;
 
   try {
     const ai = new GoogleGenAI({ apiKey });
