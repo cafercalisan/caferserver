@@ -214,7 +214,7 @@ ${quest.comments.slice(-20).map((c) => `[${c.author}]: ${c.content}`).join("\n")
 
     // Gemini chat oturumu olustur
     const chat = ai.chats.create({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.1-pro-preview",
       config: {
         tools: [{ functionDeclarations: toolDeclarations }],
         systemInstruction: systemPrompt,
