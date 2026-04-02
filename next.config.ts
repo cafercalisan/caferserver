@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: "standalone",
+  images: {
+    formats: ["image/avif", "image/webp"],
+  },
+  serverExternalPackages: ["ssh2", "bcryptjs"],
 };
 
 export default nextConfig;

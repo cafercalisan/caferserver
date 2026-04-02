@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  level        Int      @default(1)
+  xp           Int      @default(0)
+  title        String   @default("Çırak Koruyucu")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Site {
+  id           String        @id @default(cuid())
+  name         String
+  url          String
+  coolifyId    String?
+  villageName  String
+  villageType  String
+  icon         String        @default("🏘️")
+  order        Int           @default(0)
+  createdAt    DateTime      @default(now())
+  healthChecks HealthCheck[]
+  deployments  Deployment[]
+}
+
+model HealthCheck {
+  id           String   @id @default(cuid())
+  siteId       String
+  site         Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  status       Int
+  responseTime Int
+  isUp         Boolean
+  checkedAt    DateTime @default(now())
+
+  @@index([siteId, checkedAt])
+}
+
+model ServerMetric {
+  id         String   @id @default(cuid())
+  cpuUsage   Float
+  ramUsage   Float
+  ramTotal   Float
+  diskUsage  Float
+  diskTotal  Float
+  networkIn  Float
+  networkOut Float
+  recordedAt DateTime @default(now())
+
+  @@index([recordedAt])
+}
+
+model Deployment {
+  id              String    @id @default(cuid())
+  siteId          String
+  site            Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  coolifyDeployId String?
+  status          String    @default("pending")
+  questName       String
+  xpAwarded       Int       @default(0)
+  triggeredAt     DateTime  @default(now())
+  completedAt     DateTime?
+  logs            String?   @db.Text
+
+  @@index([siteId, triggeredAt])
+}
+
+model Achievement {
+  id          String    @id @default(cuid())
+  key         String    @unique
+  name        String
+  description String
+  icon        String
+  xpReward    Int
+  unlockedAt  DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  type      String
+  message   String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}

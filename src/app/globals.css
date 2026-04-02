@@ -1,26 +1,84 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-castle-bg: #1a1a2e;
+  --color-castle-surface: #16213e;
+  --color-castle-border: #2a2a4e;
+  --color-gold: #f0c040;
+  --color-gold-dim: #a08030;
+  --color-health-green: #44cc44;
+  --color-health-yellow: #ccaa44;
+  --color-health-red: #cc4444;
+  --color-mana-blue: #4488cc;
+  --color-parchment: #e8e0d0;
+  --color-parchment-dim: #b8b0a0;
+  --color-village-library: #8b5cf6;
+  --color-village-fortress: #ef4444;
+  --color-village-inn: #f59e0b;
+  --color-village-forge: #06b6d4;
+  --font-medieval: "MedievalSharp", cursive;
+  --font-mono: "JetBrains Mono", monospace;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-castle-bg);
+  color: var(--color-parchment);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-castle-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-castle-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gold-dim);
+}
+
+@utility rpg-card {
+  background: linear-gradient(135deg, rgba(22, 33, 62, 0.9), rgba(26, 26, 46, 0.95));
+  border: 1px solid var(--color-castle-border);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+}
+
+@utility rpg-card-gold {
+  background: linear-gradient(135deg, rgba(22, 33, 62, 0.9), rgba(26, 26, 46, 0.95));
+  border: 1px solid var(--color-gold-dim);
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(240, 192, 64, 0.1);
+}
+
+@utility rpg-glow-green {
+  box-shadow: 0 0 10px rgba(68, 204, 68, 0.3), 0 0 20px rgba(68, 204, 68, 0.1);
+}
+
+@utility rpg-glow-red {
+  box-shadow: 0 0 10px rgba(204, 68, 68, 0.3), 0 0 20px rgba(204, 68, 68, 0.1);
+}
+
+@utility rpg-glow-gold {
+  box-shadow: 0 0 10px rgba(240, 192, 64, 0.3), 0 0 20px rgba(240, 192, 64, 0.1);
+}
+
+@utility rpg-gradient-text {
+  background: linear-gradient(135deg, var(--color-gold), var(--color-parchment));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@utility health-bar-bg {
+  background: linear-gradient(90deg, rgba(26, 26, 46, 0.8), rgba(42, 42, 78, 0.4));
+  border: 1px solid var(--color-castle-border);
+  border-radius: 6px;
+  overflow: hidden;
 }
