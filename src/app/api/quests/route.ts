@@ -97,5 +97,16 @@ export async function POST(request: NextRequest) {
     },
   });
 
+  // Arka planda hazirlik gorevlerini baslat (fire-and-forget)
+  const baseUrl = request.nextUrl.origin;
+  fetch(`${baseUrl}/api/quests/${quest.id}/execute`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      cookie: request.headers.get("cookie") ?? "",
+    },
+    body: JSON.stringify({ phase: "prepare" }),
+  }).catch(() => {});
+
   return NextResponse.json(quest, { status: 201 });
 }

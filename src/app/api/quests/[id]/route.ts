@@ -94,6 +94,19 @@ export async function PUT(
         content: `Durum değişti: ${statusLabels[quest.status] ?? quest.status} → ${statusLabels[status] ?? status}`,
       },
     });
+
+    // in_progress gecisinde arka plan execute gorevlerini baslat
+    if (status === "in_progress") {
+      const baseUrl = request.nextUrl.origin;
+      fetch(`${baseUrl}/api/quests/${id}/execute`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          cookie: request.headers.get("cookie") ?? "",
+        },
+        body: JSON.stringify({ phase: "execute" }),
+      }).catch(() => {});
+    }
   }
 
   const updated = await prisma.quest.update({
