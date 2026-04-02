@@ -21,7 +21,7 @@ RUN mkdir -p /externals && \
       postgres-array postgres-bytea postgres-date postgres-interval postgres-range \
       pgpass buffer-writer packet-reader pg-cloudflare pg-connection-string split2 \
       cpu-features nan asn1 bcrypt-pbkdf buildcheck tweetnacl \
-      @anthropic-ai/sdk; do \
+      @google/genai; do \
       [ -d "node_modules/$pkg" ] && cp -r "node_modules/$pkg" "/externals/$pkg" || true; \
     done
 

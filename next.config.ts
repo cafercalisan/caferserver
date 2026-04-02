@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
   },
-  serverExternalPackages: ["ssh2", "bcryptjs", "@anthropic-ai/sdk"],
+  serverExternalPackages: ["ssh2", "bcryptjs", "@google/genai"],
 };
 
 export default nextConfig;
