@@ -39,28 +39,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: "/login",
   },
   callbacks: {
-    authorized({ auth: session, request: { nextUrl } }) {
-      const isLoggedIn = !!session?.user;
-      const isOnDashboard = nextUrl.pathname.startsWith("/dashboard") ||
-        nextUrl.pathname.startsWith("/sites") ||
-        nextUrl.pathname.startsWith("/terminal") ||
-        nextUrl.pathname.startsWith("/logs") ||
-        nextUrl.pathname.startsWith("/deployments") ||
-        nextUrl.pathname.startsWith("/files") ||
-        nextUrl.pathname.startsWith("/metrics") ||
-        nextUrl.pathname.startsWith("/profile");
-
-      if (isOnDashboard) {
-        if (isLoggedIn) return true;
-        return false;
-      }
-
-      if (isLoggedIn && nextUrl.pathname === "/login") {
-        return Response.redirect(new URL("/dashboard", nextUrl));
-      }
-
-      return true;
-    },
     jwt({ token, user }) {
       if (user) {
         token.id = user.id;
