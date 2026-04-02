@@ -15,6 +15,15 @@ COPY . .
 RUN npx prisma generate
 RUN npm run build
 
+# Copy external packages needed at runtime into a clean folder
+RUN mkdir -p /externals && \
+    for pkg in bcryptjs ssh2 pg pg-pool pg-types pg-protocol pg-int8 pg-numeric \
+      postgres-array postgres-bytea postgres-date postgres-interval postgres-range \
+      pgpass buffer-writer packet-reader pg-cloudflare pg-connection-string split2 \
+      cpu-features nan asn1 bcrypt-pbkdf buildcheck tweetnacl; do \
+      [ -d "node_modules/$pkg" ] && cp -r "node_modules/$pkg" "/externals/$pkg" || true; \
+    done
+
 # Runner
 FROM base AS runner
 WORKDIR /app
@@ -28,26 +37,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/bcryptjs ./node_modules/bcryptjs
-COPY --from=builder /app/node_modules/ssh2 ./node_modules/ssh2
-COPY --from=builder /app/node_modules/pg ./node_modules/pg
-COPY --from=builder /app/node_modules/pg-pool ./node_modules/pg-pool
-COPY --from=builder /app/node_modules/pg-types ./node_modules/pg-types
-COPY --from=builder /app/node_modules/pg-protocol ./node_modules/pg-protocol
-COPY --from=builder /app/node_modules/pg-int8 ./node_modules/pg-int8
-COPY --from=builder /app/node_modules/pg-numeric ./node_modules/pg-numeric
-COPY --from=builder /app/node_modules/postgres-array ./node_modules/postgres-array
-COPY --from=builder /app/node_modules/postgres-bytea ./node_modules/postgres-bytea
-COPY --from=builder /app/node_modules/postgres-date ./node_modules/postgres-date
-COPY --from=builder /app/node_modules/postgres-interval ./node_modules/postgres-interval
-COPY --from=builder /app/node_modules/postgres-range ./node_modules/postgres-range
-COPY --from=builder /app/node_modules/pgpass ./node_modules/pgpass
-COPY --from=builder /app/node_modules/buffer-writer ./node_modules/buffer-writer
-COPY --from=builder /app/node_modules/packet-reader ./node_modules/packet-reader
-COPY --from=builder /app/node_modules/obuf ./node_modules/obuf
-COPY --from=builder /app/node_modules/pg-cloudflare ./node_modules/pg-cloudflare
-COPY --from=builder /app/node_modules/pg-connection-string ./node_modules/pg-connection-string
-COPY --from=builder /app/node_modules/split2 ./node_modules/split2
+COPY --from=builder /externals/ ./node_modules/
 
 USER nextjs
 EXPOSE 3000
